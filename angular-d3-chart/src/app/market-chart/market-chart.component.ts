@@ -24,7 +24,9 @@ export class MarketChartComponent implements OnChanges {
   constructor() { }
 
   ngOnChanges() {
-    if (this.marketStatus) {
+    if (this.marketStatus &&  this.chartProps) {
+      this.updateChart();
+    } else if (this.marketStatus) {
       this.buildChart();
     }
   }
@@ -35,6 +37,36 @@ export class MarketChartComponent implements OnChanges {
         ms.date = this.parseDate(ms.date);
       }
     });
+  }
+
+  updateChart() {
+    let _this = this;
+    this.formatDate();
+
+    // Scale the range of the data again
+    this.chartProps.x.domain(d3.extent(this.marketStatus, function (d) {
+      if (d.date instanceof Date) {
+        return d.date.getTime();
+      }
+    }));
+
+    this.chartProps.y.domain([0, d3.max(this.marketStatus, function (d) { return Math.max(d.close, d.open); })]);
+
+    // Select the section we want to apply our changes to
+    this.chartProps.svg.transition();
+
+    // Make the changes to the line chart
+    this.chartProps.svg.select('.line.line1') // update the line
+      .attr('d', this.chartProps.valueline(this.marketStatus));
+
+    this.chartProps.svg.select('.line.line2') // update the line
+      .attr('d', this.chartProps.valueline2(this.marketStatus));
+
+    this.chartProps.svg.select('.x.axis') // update x axis
+      .call(this.chartProps.xAxis);
+
+    this.chartProps.svg.select('.y.axis') // update y axis
+      .call(this.chartProps.yAxis);
   }
 
   buildChart() {

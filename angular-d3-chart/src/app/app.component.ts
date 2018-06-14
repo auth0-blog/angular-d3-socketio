@@ -19,10 +19,14 @@ export class AppComponent {
   }
 
   constructor(private marketStatusSvc: MarketStatusService) {
+  this.marketStatusSvc.getInitialMarketStatus()
+    .subscribe(prices => {
+      this.MarketStatus = prices;
 
-    this.marketStatusSvc.getInitialMarketStatus()
-      .subscribe(prices => {
-        this.MarketStatus = prices;
-      });
-  }
+      let marketUpdateObservable =  this.marketStatusSvc.getUpdates();  // 1
+      marketUpdateObservable.subscribe((latestStatus: MarketPrice) => {  // 2
+        this.MarketStatus = [latestStatus].concat(this.marketStatus);  // 3
+      });  // 4
+    });
+}
 }
